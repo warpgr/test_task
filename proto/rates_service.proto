@@ -1,0 +1,59 @@
+
+
+syntax = "proto3";
+
+package grinex.v1;
+
+// Укажите корректный путь для генерации Go-кода
+option go_package = "github.com/your-username/your-project/pkg/pb;pb";
+
+import "google/protobuf/empty.proto";
+
+service RateService {
+  // Получает текущий курс с Grinex, рассчитывает значения, 
+  // сохраняет в PostgreSQL и возвращает клиенту.
+  rpc GetRates(GetRatesRequest) returns (GetRatesResponse);
+
+  // Проверка работоспособности сервиса (включая коннект к БД).
+  rpc HealthCheck(google.protobuf.Empty) returns (HealthCheckResponse);
+}
+
+// Метод расчета конечной цены из стакана
+enum CalcMethod {
+  CALC_METHOD_UNSPECIFIED = 0;
+  CALC_METHOD_TOP_N = 1;
+  CALC_METHOD_AVG_N_M = 2;
+}
+
+message GetRatesRequest {
+  // Валютная пара (например, "USDT_RUB")
+  string pair = 1;
+
+  // Метод агрегации данных из стакана (TopN или AvgNM)
+  CalcMethod calc_method = 2;
+
+  // Параметр N (индекс для TopN или начало диапазона для AvgNM)
+  int32 n = 3;
+
+  // Параметр M (конец диапазона, используется только для AvgNM)
+  int32 m = 4;
+}
+
+message GetRatesResponse {
+  // Рассчитанная цена продажи (Ask)
+  double ask = 1;
+  
+  // Рассчитанная цена покупки (Bid)
+  double bid = 2;
+  
+  // Unix timestamp в миллисекундах для высокой точности
+  int64 timestamp_ms = 3;
+}
+
+message HealthCheckResponse {
+  // Статус сервиса (true = жив и БД отвечает)
+  bool is_healthy = 1;
+  
+  // Опциональное сообщение (например, "OK" или текст ошибки БД)
+  string status_message = 2;
+}
